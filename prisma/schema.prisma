@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Note: You might need to add relationMode = "prisma" if you encounter issues
+  // with referential integrity when using Json fields alongside relations,
+  // depending on your specific Prisma/DB setup.
+  // relationMode = "prisma"
+}
+
+
+enum LisanceOptions {
+  A1
+  A
+  B1
+  B
+  C1
+  C
+  D1
+  D
+  BE
+  C1E
+  CE
+  DE
+  D1E
+  T
+  }
+
+// Define an enum for permission scope types
+// enum DrivingScopeType {
+//   DOMESTIC // Represents the single home country
+//   CONTINENT // Represents a whole continent (e.g., Europe)
+//   COUNTRY  // Represents a specific international country
+// }
+
+model Driver {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String
+  experience     Int      // full years of experience
+  salary         Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+
+  // Add the JSON field for driving permissions
+  //drivingPermissions Json?   @db.JsonB // Using JsonB for PostgreSQL is recommended
+
+  // Relations
+  driverLicense DriverLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade) // Ensures a driver can have only one license
+  licenseId      Int @unique
+  car            Car?     @relation(fields: [carId], references: [id]) // Only define `references` here
+  carId          Int?     @unique // Ensures a driver can have only one car
+}
+
+model DriverLicense {
+  id       Int    @id @default(autoincrement())
+  type     LisanceOptions[] // "B", "B1", "A", "A1", etc.
+  driver   Driver? @relation // Make this side optional without `fields` or `references`
+}
+
+model Car {
+  id       Int     @id @default(autoincrement())
+  registrationPlate String @unique 
+  model    String // truck, bus, etc. for not driver users mb
+  brand    String
+  type     LisanceOptions
+  year     Int
+  driver   Driver? @relation() // No need to define `fields` or `references` here
+}
