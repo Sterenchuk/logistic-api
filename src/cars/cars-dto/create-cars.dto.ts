@@ -31,8 +31,7 @@ export class CreateCarsDto {
   @IsString({ message: 'License plate must be a string.' })
   @IsNotEmpty({ message: 'License plate cannot be empty.' })
   @Matches(/^[A-Z0-9-]+$/, {
-    message:
-      'License plate must contain only uppercase letters, numbers, and hyphens.',
+    message: 'License plate must contain only uppercase letters, numbers, and hyphens.',
   })
   registrationPlate: string;
 

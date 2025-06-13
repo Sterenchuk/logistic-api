@@ -5,6 +5,7 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpRequestLoggerMiddleware } from './logger/http-log-schema.middlaeware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     HttpLoggerModule,
     CarsModule,
     DriversModule,
+    AuthModule,
   ],
 })
 export class AppModule implements NestModule {

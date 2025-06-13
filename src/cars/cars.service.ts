@@ -46,9 +46,7 @@ export class CarsService {
     });
 
     if (!car) {
-      throw new NotFoundException(
-        `Car with registration plate ${registrationPlate} not found.`,
-      );
+      throw new NotFoundException(`Car with registration plate ${registrationPlate} not found.`);
     }
 
     return car;

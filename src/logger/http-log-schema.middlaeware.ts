@@ -45,9 +45,7 @@ export class HttpRequestLoggerMiddleware implements NestMiddleware {
 
     res.on('finish', async () => {
       const statusCode = res.statusCode;
-      this.logger.log(
-        `[${requestId}] ${method} ${url} - Status: ${statusCode}`,
-      );
+      this.logger.log(`[${requestId}] ${method} ${url} - Status: ${statusCode}`);
 
       try {
         await this.httpRequestLogModel.create({

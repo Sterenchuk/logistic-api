@@ -7,5 +7,6 @@ import { DatabaseModule } from 'src/database/database.module';
   imports: [DatabaseModule],
   providers: [DriversService],
   controllers: [DriversController],
+  exports: [DriversService],
 })
 export class DriversModule {}

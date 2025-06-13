@@ -22,7 +22,6 @@ export class DriversService {
     if (exp) {
       where.experience = { gte: exp };
     }
-    console.log('Filtering by experience (gte):', exp);
 
     if (minSalary && maxSalary) {
       where.salary = { gte: minSalary, lte: maxSalary };
@@ -77,6 +76,7 @@ export class DriversService {
 
   async create(createDriverDto: Prisma.DriverCreateInput): Promise<Driver> {
     const salt = await bcrypt.genSalt();
+    console.log(`salt = ${salt}`);
     const hashedPassword = await bcrypt.hash(createDriverDto.password, salt);
 
     const databaseData: Prisma.DriverCreateInput = {
@@ -100,14 +100,10 @@ export class DriversService {
       ) {
         const target = error.meta?.target;
         if (Array.isArray(target) && target.includes('email')) {
-          throw new ConflictException(
-            `Email '${createDriverDto.email}' is already taken.`,
-          );
+          throw new ConflictException(`Email '${createDriverDto.email}' is already taken.`);
         }
 
-        console.warn(
-          `Prisma unique constraint violation (P2002) on target: ${target}`,
-        );
+        console.warn(`Prisma unique constraint violation (P2002) on target: ${target}`);
 
         throw new ConflictException('A unique constraint was violated.');
       }
@@ -133,9 +129,7 @@ export class DriversService {
       }
 
       if (driver?.car) {
-        throw new ConflictException(
-          `Driver with ID ${driverId} already has a car assigned.`,
-        );
+        throw new ConflictException(`Driver with ID ${driverId} already has a car assigned.`);
       }
 
       const licenseTypes = driver.driverLicense?.type || [];
@@ -171,22 +165,13 @@ export class DriversService {
         throw error;
       }
 
-      if (
-        error.code === 'P2025' &&
-        error instanceof Prisma.PrismaClientKnownRequestError
-      ) {
+      if (error.code === 'P2025' && error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new ConflictException('Driver already has a car assigned.');
       }
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
-      console.error(
-        `Error assigning car ${carId} to driver ${driverId}:`,
-        error,
-      );
+      console.error(`Error assigning car ${carId} to driver ${driverId}:`, error);
       throw new InternalServerErrorException('Could not assign car.');
     }
   }
@@ -202,9 +187,7 @@ export class DriversService {
     }
 
     if (!driver.car) {
-      throw new NotFoundException(
-        `Driver car with driver ID ${driverId} not found.`,
-      );
+      throw new NotFoundException(`Driver car with driver ID ${driverId} not found.`);
     }
 
     return this.databaseService.driver.update({
@@ -239,10 +222,7 @@ export class DriversService {
       }
       if (updateDriverDto.password) {
         const salt = await bcrypt.genSalt();
-        updateDriverDto.password = await bcrypt.hash(
-          updateDriverDto.password,
-          salt,
-        );
+        updateDriverDto.password = await bcrypt.hash(updateDriverDto.password, salt);
       }
 
       const updatedDriver = await this.databaseService.driver.update({
@@ -257,9 +237,30 @@ export class DriversService {
       return updatedDriver;
     } catch (error) {
       console.error('Error updating driver:', error);
-      throw new InternalServerErrorException(
-        `Could not update driver with ID ${id}.`,
-      );
+      throw new InternalServerErrorException(`Could not update driver with ID ${id}.`);
     }
+  }
+
+  async saveRefreshedToken(driverId: number, refreshToken: string) {
+    const driver = await this.databaseService.driver.findUnique({
+      where: { id: driverId },
+    });
+
+    if (!driver) {
+      throw new NotFoundException(`Driver with ID ${driverId} not found.`);
+    }
+
+    const newDriver = await this.databaseService.driver.update({
+      where: { id: driverId },
+      data: {
+        refreshToken: refreshToken,
+      },
+    });
+
+    if (!newDriver) {
+      throw new NotFoundException(`Driver with ID ${driverId} wasn't updated.`);
+    }
+
+    return newDriver;
   }
 }
